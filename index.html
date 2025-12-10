@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS Fasilitas Kesehatan Kabupaten Jepara</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>🏥 WebGIS Fasilitas Kesehatan Kabupaten Jepara</h1>
+            <div class="header-actions">
+                <button id="darkModeToggle" class="btn-icon" title="Toggle Dark Mode">🌙</button>
+                <button id="myLocationBtn" class="btn-icon" title="Lokasi Saya">📍</button>
+                <button id="exportBtn" class="btn-icon" title="Export Data">💾</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Statistics -->
+            <div class="card stats-card">
+                <h3>📊 Statistik</h3>
+                <div class="stats-grid">
+                    <div class="stat-item stat-rs">
+                        <span class="stat-number" id="statRS">0</span>
+                        <span class="stat-label">Rumah Sakit</span>
+                    </div>
+                    <div class="stat-item stat-puskesmas">
+                        <span class="stat-number" id="statPuskesmas">0</span>
+                        <span class="stat-label">Puskesmas</span>
+                    </div>
+                    <div class="stat-item stat-klinik">
+                        <span class="stat-number" id="statKlinik">0</span>
+                        <span class="stat-label">Klinik</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Box -->
+            <div class="card search-card">
+                <h3>🔍 Cari Fasilitas</h3>
+                <input type="text" id="searchInput" placeholder="Ketik nama fasilitas..." class="input-field">
+            </div>
+
+            <!-- Add Location Form -->
+            <div class="card form-card">
+                <h3>➕ Tambah Lokasi Baru</h3>
+                <form id="addLocationForm">
+                    <div class="form-group">
+                        <label for="namaFasilitas">Nama Fasilitas</label>
+                        <input type="text" id="namaFasilitas" class="input-field" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jenisFasilitas">Jenis Fasilitas</label>
+                        <select id="jenisFasilitas" class="input-field" required>
+                            <option value="">-- Pilih Jenis --</option>
+                            <option value="Rumah Sakit">Rumah Sakit</option>
+                            <option value="Puskesmas">Puskesmas</option>
+                            <option value="Klinik">Klinik</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="number" id="latitude" class="input-field" step="any" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="number" id="longitude" class="input-field" step="any" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alamat">Alamat</label>
+                        <textarea id="alamat" class="input-field" rows="3" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Tambah Lokasi</button>
+                    <button type="button" id="pickLocationBtn" class="btn-secondary">📍 Pilih dari Peta</button>
+                </form>
+            </div>
+
+            <!-- Facility List -->
+            <div class="card list-card">
+                <h3>📋 Daftar Fasilitas</h3>
+                <div id="facilityList" class="facility-list"></div>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main class="map-container">
+            <div id="map"></div>
+            
+            <!-- Legend -->
+            <div class="legend">
+                <h4>Legenda</h4>
+                <div class="legend-item">
+                    <span class="legend-icon legend-rs"></span>
+                    <span>Rumah Sakit</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon legend-puskesmas"></span>
+                    <span>Puskesmas</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon legend-klinik"></span>
+                    <span>Klinik</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Edit Fasilitas</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <form id="editLocationForm">
+                <input type="hidden" id="editIndex">
+                <div class="form-group">
+                    <label for="editNama">Nama Fasilitas</label>
+                    <input type="text" id="editNama" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label for="editJenis">Jenis Fasilitas</label>
+                    <select id="editJenis" class="input-field" required>
+                        <option value="Rumah Sakit">Rumah Sakit</option>
+                        <option value="Puskesmas">Puskesmas</option>
+                        <option value="Klinik">Klinik</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editLat">Latitude</label>
+                        <input type="number" id="editLat" class="input-field" step="any" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editLng">Longitude</label>
+                        <input type="number" id="editLng" class="input-field" step="any" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editAlamat">Alamat</label>
+                    <textarea id="editAlamat" class="input-field" rows="3" required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Simpan Perubahan</button>
+                    <button type="button" class="btn-danger" id="deleteBtn">Hapus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="script.js"></script>
+</body>
+</html>
